@@ -1,36 +1,35 @@
-# This is a basic workflow to help you get started with Actions
+name: Banco de Dados Backup Diário
 
-name: Banco PingWord Backup Diario
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   schedule:
     - cron: '0 3 * * *'
-   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   backup:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Instalar PostgreSQL 18 Client
         run: |
+          # Adiciona o repositório oficial do PostgreSQL
           sudo apt-get update
-          sudo apt-get install -y wget gnupg2
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get install -y wget gnupg2 lsb-release
+          
+          # Baixa a chave e adiciona ao chaveiro do sistema
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg
+          
+          # Adiciona o repositório oficial garantindo a arquitetura correta
+          echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          
+          # Atualiza e instala a versão 18 explicitamente
           sudo apt-get update
           sudo apt-get install -y postgresql-client-18
 
       - name: Executar Dump do Banco
-        run: pg_dump "${{ secrets.DB_CONNECTION_STRING }}" > backup_render.sql
+        run: |
+          # Usamos o caminho completo para garantir que estamos usando a versão 18
+          /usr/lib/postgresql/18/bin/pg_dump "${{ secrets.DB_CONNECTION_STRING }}" > backup_render.sql
 
       - name: Salvar Backup como Artefato
         uses: actions/upload-artifact@v4
