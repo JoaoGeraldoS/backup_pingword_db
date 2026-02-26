@@ -20,8 +20,13 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Instalar Client PostgreSQL
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Instalar PostgreSQL 18 Client
+        run: sudo apt-get update
+          sudo apt-get install -y wget gnupg2
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-18
 
       - name: Executar Dump do Banco
         run: pg_dump "${{ secrets.DB_CONNECTION_STRING }}" > backup_render.sql
