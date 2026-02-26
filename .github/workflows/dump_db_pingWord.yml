@@ -21,7 +21,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Instalar Client PostgreSQL
-        run: sudo apt-get update && sudo apt-get intall -y postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Executar Dump do Banco
         run: pg_dump "${{ secrets.DB_CONNECTION_STRING }}" > backup_render.sql
