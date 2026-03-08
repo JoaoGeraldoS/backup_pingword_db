@@ -10,30 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Instalar PostgreSQL 18 Client
+      - name: Instalar PostgreSQL Client
         run: |
-          # Adiciona o repositório oficial do PostgreSQL
           sudo apt-get update
-          sudo apt-get install -y wget gnupg2 lsb-release
-          
-          # Baixa a chave e adiciona ao chaveiro do sistema
-          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg
-          
-          # Adiciona o repositório oficial garantindo a arquitetura correta
-          echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
-          
-          # Atualiza e instala a versão 18 explicitamente
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client-18
+          sudo apt-get install -y postgresql-client
 
       - name: Executar Dump do Banco
         run: |
-          # Usamos o caminho completo para garantir que estamos usando a versão 18
-          /usr/lib/postgresql/18/bin/pg_dump "${{ secrets.DB_CONNECTION_STRING }}" > backup_render.sql
+          pg_dump "${{ secrets.DB_CONNECTION_STRING }}?sslmode=require" | gzip > backup_render.sql.gz
 
       - name: Salvar Backup como Artefato
         uses: actions/upload-artifact@v4
         with:
           name: backup-do-dia-${{ github.run_id }}
-          path: backup_render.sql
+          path: backup_render.sql.gz
           retention-days: 30
